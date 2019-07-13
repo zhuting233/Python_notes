@@ -681,3 +681,235 @@ def move(n,a,b,c):
         
 move(3, 'A', 'B', 'C')
 ```
+
+## Py高级特性
+
+### 切片
+取出list or tuple的部分元素 
+
+切片操作基本表达式：object[start_index:end_index:step]
+
+step：正负数均可，其绝对值大小决定了切取数据时的‘‘步长”，而正负号决定了“切取方向”，正表示“从左往右”取值，负表示“从右往左”取值。当step省略时，默认为1，即从左往右以增量1取值。“切取方向非常重要！”“切取方向非常重要！”“切取方向非常重要！”，重要的事情说三遍！
+
+start_index：表示起始索引（包含该索引本身）；该参数省略时，表示从对象“端点”开始取值，至于是从“起点”还是从“终点”开始，则由step参数的正负决定，step为正从“起点”开始，为负从“终点”开始。
+
+end_index：表示终止索引（不包含该索引本身）；该参数省略时，表示一直取到数据“端点”，至于是到“起点”还是到“终点”，同样由step参数的正负决定，step为正时直到“终点”，为负时直到“起点”。
+
+eg:
+```py
+a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+切取完整对象
+>>>a[:] #从左往右
+>>> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+>>>a[::-1]#从右往左
+>>> [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+
+start_index和end_index全为正（+）索引的情况
+>>>a[1:6]
+>>> [1, 2, 3, 4, 5]
+step=1，从左往右取值，start_index=1到end_index=6同样表示从左往右取值。
+
+>>>a[1:6:-1]
+>>> []
+输出为空列表，说明没取到数据。
+step=-1，决定了从右往左取值，而start_index=1到end_index=6决定了从左往右取值，两者矛盾，所以为空。
+
+连续切片操作
+>>>a[:8][2:5][-1:]
+>>> [4]
+相当于：
+a[:8]=[0, 1, 2, 3, 4, 5, 6, 7]
+a[:8][2:5]= [2, 3, 4]
+a[:8][2:5][-1:] = 4
+理论上可无限次连续切片操作，只要上一次返回的依然是非空可切片对象。
+
+修改单个元素
+>>>a[3] = ['A','B']
+[0, 1, 2, ['A', 'B'], 4, 5, 6, 7, 8, 9]
+
+在某个位置插入元素
+>>>a[3:3] = ['A','B','C']
+[0, 1, 2, 'A', 'B', 'C', 3, 4, 5, 6, 7, 8, 9]
+>>>a[0:0] = ['A','B']
+['A', 'B', 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+替换一部分元素
+>>>a[3:6] = ['A','B']
+[0, 1, 2, 'A', 'B', 6, 7, 8, 9]
+```
+goood eg:   (trim)
+```py
+def trim(s):
+    if s == '' or s[0] != ' ' and s[-1] != ' ':
+        return s
+    if s[0] == ' ':
+        return trim(s[1:])
+    if s[-1] == ' ':
+        return trim(s[:-1])
+
+def trim(s):
+    if s == '' or ' ' not in s[0]+s[-1]:
+        return s
+    if s[0] == ' ':
+        return trim(s[1:])
+    return trim(s[:-1])
+```
+
+### 迭代
+只要是可迭代对象，无论有无下标，都可以迭代   
+
+**DICT**   
+默认情况下，dict迭代的是key。如果要迭代value，可以用for value in d.values()，如果要同时迭代key和value，可以用for k, v in d.items()。
+
+如果要对list实现类似Java那样的下标循环怎么办？Python内置的enumerate函数可以把一个list变成索引-元素对，这样就可以在for循环中同时迭代索引和元素本身：
+```PY
+>>> for i, value in enumerate(['A', 'B', 'C']):
+...     print(i, value)
+...
+0 A
+1 B
+2 C
+
+上面的for循环里，同时引用了两个变量，在Python里是很常见的，比如下面的代码：
+
+>>> for x, y in [(1, 1), (2, 4), (3, 9)]:
+...     print(x, y)
+...
+1 1
+2 4
+3 9
+```
+### 列表生成式
+```py
+>>> list(range(1, 11))
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+要生成[1x1, 2x2, 3x3, ..., 10x10]
+
+>>> [x * x for x in range(1, 11)]
+[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+写列表生成式时，把要生成的元素x * x放到前面，后面跟for循环，就可以把list创建出来
+
+for循环后面还可以加上if判断，这样我们就可以筛选出仅偶数的平方：
+>>> [x * x for x in range(1, 11) if x % 2 == 0]
+[4, 16, 36, 64, 100]
+
+还可以使用两层循环，可以生成全排列：
+>>> [m + n for m in 'ABC' for n in 'XYZ']
+['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
+
+```
+### 生成器
+generator   
+循环的过程中不断推算出后续的元素
+
+第一种方法很简单，只要把一个列表生成式的[]改成()，就创建了一个generator。
+```py
+>>> g = (x * x for x in range(10))
+>>> g
+<generator object <genexpr> at 0x1022ef630>
+
+如果要一个一个打印出来，可以通过next()函数获得generator的下一个返回值：
+
+>>> next(g)
+0
+>>> next(g)
+1
+>>> next(g)
+4
+>>> next(g)
+9
+>>> next(g)
+16
+>>> next(g)
+25
+```
+for循环迭代
+```py
+>>> g = (x * x for x in range(10))
+>>> for n in g:
+...     print(n)
+... 
+0
+1
+4
+9
+16
+25
+36
+49
+64
+81
+
+def fib(max):
+    n, a, b = 0, 0, 1
+    while n < max:
+        yield b
+        a, b = b, a + b
+        n = n + 1
+    return 'done'
+
+这就是定义generator的另一种方法。如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator。
+generator的函数，在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回的yield语句处继续执行。
+
+>>> for n in fib(6):
+...     print(n)
+...
+1
+1
+2
+3
+5
+8
+
+但是用for循环调用generator时，发现拿不到generator的return语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在StopIteration的value中：
+
+>>> g = fib(6)
+>>> while True:
+...     try:
+...         x = next(g)
+...         print('g:', x)
+...     except StopIteration as e:
+...         print('Generator return value:', e.value)
+...         break
+...
+g: 1
+g: 1
+g: 2
+g: 3
+g: 5
+g: 8
+Generator return value: done
+```
+### 迭代器
+我们已经知道，可以直接作用于for循环的数据类型有以下几种：
+
+一类是集合数据类型，如list、tuple、dict、set、str等；
+
+一类是generator，包括生成器和带yield的generator function。
+
+这些可以直接作用于for循环的对象统称为可迭代对象：Iterable。
+凡是可作用于for循环的对象都是Iterable类型；
+
+凡是可作用于next()函数的对象都是Iterator类型，它们表示一个惰性计算的序列；
+
+集合数据类型如list、dict、str等是Iterable但不是Iterator，不过可以通过iter()函数获得一个Iterator对象。
+
+Python的for循环本质上就是通过不断调用next()函数实现的，例如：
+```py
+for x in [1, 2, 3, 4, 5]:
+    pass
+实际上完全等价于：
+
+# 首先获得Iterator对象:
+it = iter([1, 2, 3, 4, 5])
+# 循环:
+while True:
+    try:
+        # 获得下一个值:
+        x = next(it)
+    except StopIteration:
+        # 遇到StopIteration就退出循环
+        break
+```
