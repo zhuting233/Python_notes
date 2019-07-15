@@ -913,3 +913,107 @@ while True:
         # 遇到StopIteration就退出循环
         break
 ```
+## 函数式编程
+### 高阶函数
+函数本身也可以赋值给变量，即：变量可以指向函数。   
+函数名其实就是指向函数的变量！也可以指向其他的对象。   
+既然变量可以指向函数，函数的参数能接收变量，那么一个函数就可以接收另一个函数作为参数，这种函数就称之为高阶函数。  
+
+一个最简单的高阶函数：
+```py
+def add(x, y, f):
+    return f(x) + f(y)
+当我们调用add(-5, 6, abs)时，参数x，y和f分别接收-5，6和abs，根据函数定义，我们可以推导计算过程为：
+
+x = -5
+y = 6
+f = abs
+f(x) + f(y) ==> abs(-5) + abs(6) ==> 11
+return 11
+```
+#### map/reduce
+map()函数接收两个参数，一个是函数，一个是Iterable，map将传入的函数依次作用到序列的每个元素，并把结果作为新的Iterator返回。
+
+f(x)=x2，要把这个函数作用在一个list [1, 2, 3, 4, 5, 6, 7, 8, 9]上，就可以用map()实现如下：
+```py
+def f(x):
+    return x*x
+print(list(map(f,[1,2,3,4,5,6,7,8,9])))
+
+[1, 4, 9, 16, 25, 36, 49, 64, 81]
+```
+reduce把一个函数作用在一个序列[x1, x2, x3, ...]上，这个函数必须接收两个参数，reduce把结果继续和序列的下一个元素做累积计算，其效果就是：
+
+reduce(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
+
+把序列[1, 3, 5, 7, 9]变换成整数13579，reduce就可以派上用场：
+```py
+from functools import reduce
+def fn(x,y):
+    return 10*x+y
+print(reduce(fn,[1,3,5,7,9]))
+
+13579
+```
+str-->int
+```py
+from functools import reduce
+
+DIGITS = {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}
+
+def char2num(s):
+    return DIGITS[s]
+
+def str2int(s):
+    return reduce(lambda x, y: x * 10 + y, map(char2num, s))
+```
+### filter
+filter()函数用于过滤序列。
+
+和map()类似，filter()也接收一个函数和一个序列。和map()不同的是，filter()把传入的函数依次作用于每个元素，然后根据返回值是True还是False决定保留还是丢弃该元素。
+```py
+例如，在一个list中，删掉偶数，只保留奇数，可以这么写：
+
+def is_odd(n):
+    return n % 2 == 1
+
+list(filter(is_odd, [1, 2, 4, 5, 6, 9, 10, 15]))
+# 结果: [1, 5, 9, 15]
+把一个序列中的空字符串删掉，可以这么写：
+
+def not_empty(s):
+    return s and s.strip()
+
+list(filter(not_empty, ['A', '', 'B', None, 'C', '  ']))
+# 结果: ['A', 'B', 'C']
+```
+可见用filter()这个高阶函数，关键在于正确实现一个“筛选”函数。
+
+注意到filter()函数返回的是一个Iterator，也就是一个惰性序列，所以要强迫filter()完成计算结果，需要用list()函数获得所有结果并返回list。
+
+素数筛法
+```py
+#定义奇数序列(生成器)
+def _odd_iter():
+    n=1
+    while True:
+        n+=2
+        yield n
+#过滤函数
+def _not_divisible(n):
+    return lambda x:x%n>0
+#素数序列
+def prime():
+    yield 2
+    it=_odd_iter()
+    while True:
+        n=next(it)
+        yield n
+        it=filter(_not_divisible(n),it)
+#打印素数
+for n in prime():
+    if(n<1000):
+        print(n)
+    else:
+        break
+```        
